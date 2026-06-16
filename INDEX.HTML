@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Foundations: a field guide to the stack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0d1b2a; --ink2:#13263b; --paper:#edf1f7; --surface:#ffffff;
+    --line:#d6deea; --muted:#566476; --brass:#cf9526; --teal:#0a7d75;
+    --app:#4f46e5; --orch:#0e8aa8; --gateway:#c2410c; --model:#be123c; --compute:#15803d; --gov:#5b6675;
+    --display:'Fraunces',Georgia,serif; --body:'Inter',system-ui,sans-serif; --mono:'Space Mono','SFMono-Regular',monospace;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1140px;margin:0 auto;padding:0 24px}
+  button{font-family:inherit}
+  :focus-visible{outline:2.5px solid var(--brass);outline-offset:2px;border-radius:4px}
+
+  /* ===== STICKY BAR ===== */
+  .bar{position:sticky;top:0;z-index:40;background:rgba(13,27,42,.95);backdrop-filter:blur(8px);
+    border-bottom:1px solid rgba(255,255,255,.08);color:#eaf0f7}
+  .bar__in{display:flex;align-items:center;gap:16px;padding:11px 0}
+  .bar__name{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#b7c5d7;white-space:nowrap}
+  .bar__name b{color:var(--brass)}
+  .bar__search{flex:1;min-width:0;position:relative}
+  .bar__search input{width:100%;padding:9px 12px 9px 34px;border-radius:9px;border:1px solid rgba(255,255,255,.16);
+    background:rgba(255,255,255,.06);color:#fff;font-size:14px;font-family:var(--body)}
+  .bar__search input::placeholder{color:#8295aa}
+  .bar__search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);opacity:.5}
+  .clearbtn{display:none;border:1px solid rgba(207,149,38,.5);background:rgba(207,149,38,.14);color:var(--brass);
+    font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:7px 11px;border-radius:8px;cursor:pointer;white-space:nowrap}
+  .clearbtn[data-show="true"]{display:inline-block}
+  .ring{flex:none;display:flex;align-items:center;gap:9px}
+  .ring svg{transform:rotate(-90deg)}
+  .ring__txt{font-family:var(--mono);font-size:11px;color:#b7c5d7;white-space:nowrap}
+  .ring__txt b{color:var(--brass)}
+
+  /* ===== HERO ===== */
+  .hero{background:var(--ink);color:#eef3f9;position:relative;overflow:hidden;
+    background-image:radial-gradient(rgba(255,255,255,.05) 1px,transparent 1px);background-size:22px 22px}
+  .hero::after{content:"";position:absolute;inset:0;background:radial-gradient(120% 80% at 80% 0%,rgba(207,149,38,.10),transparent 60%);pointer-events:none}
+  .hero__in{position:relative;padding:62px 0 50px}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--brass);margin-bottom:18px}
+  .hero h1{font-family:var(--display);font-weight:400;font-size:clamp(38px,7vw,76px);line-height:.98;letter-spacing:-.01em;margin:0 0 18px}
+  .hero h1 em{font-style:italic;color:var(--brass)}
+  .hero .lede{max-width:560px;font-size:17px;color:#bccadb;margin:0}
+
+  .legend{margin-top:38px}
+  .legend__label{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#7e90a8;margin-bottom:12px}
+  .legend__grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .lrow{display:flex;align-items:center;gap:12px;text-align:left;cursor:pointer;
+    border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.035);border-radius:11px;padding:11px 13px;
+    color:#dfe8f3;transition:transform .15s,background .15s,border-color .15s}
+  .lrow:hover{transform:translateY(-2px);background:rgba(255,255,255,.08)}
+  .lrow[data-on="true"]{border-color:var(--brass);background:rgba(207,149,38,.12)}
+  .lrow .sw{width:13px;height:13px;border-radius:4px;flex:none}
+  .lrow .ln{font-size:14px;font-weight:600;line-height:1.15}
+  .lrow .lr{font-family:var(--mono);font-size:10.5px;color:#8a9bb0;margin-top:1px}
+  .lrow.all .sw{background:linear-gradient(135deg,var(--app),var(--compute))}
+
+  /* ===== SECTION SHELL ===== */
+  .sec{padding:52px 0 8px}
+  .sec__eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--brass);margin:0 0 8px}
+  .sec__title{font-family:var(--display);font-weight:500;font-size:clamp(26px,3.4vw,38px);letter-spacing:-.01em;margin:0 0 8px}
+  .sec__sub{color:var(--muted);max-width:620px;margin:0 0 26px;font-size:15.5px}
+
+  /* ===== TRAILS ===== */
+  .trails{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .trail{text-align:left;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    padding:18px 17px;display:flex;flex-direction:column;gap:10px;transition:transform .15s,box-shadow .15s,border-color .15s}
+  .trail:hover{transform:translateY(-3px);box-shadow:0 10px 26px rgba(13,27,42,.10);border-color:#bcc8d8}
+  .trail__n{font-family:var(--mono);font-size:11px;color:var(--brass);letter-spacing:.06em}
+  .trail__t{font-family:var(--display);font-weight:600;font-size:18px;line-height:1.12}
+  .trail__d{font-size:13px;color:var(--muted);line-height:1.45}
+  .trail__go{margin-top:auto;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--teal)}
+
+  /* ===== TRAIL BANNER ===== */
+  .trailbar{display:none;background:var(--ink);color:#eef3f9;border-radius:14px;padding:18px 20px;margin-bottom:22px}
+  .trailbar[data-show="true"]{display:block;animation:rise .3s ease}
+  .trailbar__top{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:13px}
+  .trailbar__t{font-family:var(--display);font-weight:600;font-size:19px;margin:0}
+  .trailbar__c{font-family:var(--mono);font-size:11px;color:#9fb0c4;letter-spacing:.05em}
+  .stops{display:flex;flex-wrap:wrap;gap:8px}
+  .stop{cursor:pointer;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);color:#dfe8f3;
+    border-radius:9px;padding:7px 11px;font-size:13px;display:inline-flex;align-items:center;gap:8px;transition:background .14s,border-color .14s}
+  .stop:hover{background:rgba(255,255,255,.11)}
+  .stop[data-seen="true"]{border-color:var(--brass)}
+  .stop b{font-family:var(--mono);font-size:11px;color:var(--brass)}
+
+  /* ===== DIAGRAMS ===== */
+  .figrow{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .fig{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 20px 18px}
+  .fig h3{font-family:var(--display);font-weight:600;font-size:18px;margin:0 0 3px}
+  .fig .cap{color:var(--muted);font-size:13px;margin:0 0 15px}
+  .fig svg{width:100%;height:auto;display:block}
+  .dlyr{cursor:pointer}
+  .dlyr .lyrbox{transition:fill-opacity .15s,stroke .15s}
+  .dlyr:hover .lyrbox{fill-opacity:.2}
+  .dlyr[data-on="true"] .lyrbox{fill-opacity:.26;stroke:var(--ink);stroke-width:2.4}
+
+  /* ===== ENTRIES ===== */
+  .cat{background:var(--surface);border:1px solid var(--line);border-radius:16px;margin-bottom:16px;overflow:hidden}
+  .cat__head{width:100%;text-align:left;border:0;background:none;cursor:pointer;display:flex;align-items:center;gap:16px;padding:20px 22px}
+  .cat__t{font-family:var(--display);font-weight:600;font-size:21px;letter-spacing:-.01em;margin:0}
+  .cat__b{color:var(--muted);font-size:13.5px;margin:3px 0 0}
+  .cat__meta{margin-left:auto;display:flex;align-items:center;gap:16px}
+  .prog{display:flex;align-items:center;gap:9px}
+  .prog__txt{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap}
+  .prog__bar{width:54px;height:5px;border-radius:3px;background:var(--line);overflow:hidden}
+  .prog__fill{height:100%;width:0;background:var(--brass);transition:width .35s ease}
+  .chev{transition:transform .25s;color:var(--muted);flex:none}
+  .cat[data-open="true"] .chev{transform:rotate(180deg)}
+  .cat__body{display:none;padding:0 22px 24px}
+  .cat[data-open="true"] .cat__body{display:block}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:11px;margin-top:2px}
+  .tile{cursor:pointer;border:1px solid var(--line);border-left-width:5px;background:#fbfcfe;border-radius:10px;
+    padding:13px 13px 13px 14px;text-align:left;display:flex;flex-direction:column;gap:9px;
+    transition:transform .14s,box-shadow .14s,border-color .14s}
+  .tile:hover{transform:translateY(-2px);box-shadow:0 5px 16px rgba(13,27,42,.08)}
+  .tile[data-active="true"]{box-shadow:0 0 0 2px var(--ink) inset}
+  .tile[hidden]{display:none}
+  .tile__n{font-weight:600;font-size:15px;line-height:1.22}
+  .tile__l{font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+
+  .detail{display:none;margin-top:14px;border-radius:13px;background:var(--ink);color:#eef3f9;padding:22px 24px;animation:rise .26s ease}
+  .detail[data-show="true"]{display:block}
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .detail__top{display:flex;align-items:center;gap:11px;flex-wrap:wrap;margin-bottom:11px}
+  .detail__n{font-family:var(--display);font-weight:600;font-size:24px;margin:0}
+  .chip{font-family:var(--mono);font-size:11px;border-radius:20px;padding:4px 11px;color:#0d1b2a;font-weight:700}
+  .detail__d{font-size:16.5px;color:#dde6f1;margin:0 0 16px;max-width:62ch}
+  .detail__ex{font-size:14.5px;margin:0 0 18px;padding:13px 15px;background:rgba(255,255,255,.06);border-left:3px solid var(--brass);border-radius:0 9px 9px 0;max-width:64ch}
+  .detail__ex span{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--brass);margin-bottom:5px}
+  .seealso__l{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#8da0b6;margin:0 0 9px}
+  .seealso__row{display:flex;flex-wrap:wrap;gap:8px}
+  .ref{cursor:pointer;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#e7eef7;
+    border-radius:8px;padding:7px 11px;font-size:13px;display:inline-flex;align-items:center;gap:7px;transition:background .14s,border-color .14s}
+  .ref:hover{background:rgba(255,255,255,.12);border-color:var(--brass)}
+  .ref .sw{width:8px;height:8px;border-radius:2px;flex:none}
+
+  .empty{display:none;text-align:center;color:var(--muted);padding:44px;font-size:15px}
+  .empty[data-show="true"]{display:block}
+
+  footer{padding:40px 0 60px;color:var(--muted);font-size:13px;line-height:1.6}
+
+  @media (max-width:860px){ .trails{grid-template-columns:repeat(2,1fr)} .figrow{grid-template-columns:1fr} }
+  @media (max-width:620px){
+    .legend__grid{grid-template-columns:1fr}
+    .trails{grid-template-columns:1fr}
+    .bar__name{display:none}
+    .cat__meta .prog__txt{display:none}
+    .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div class="wrap bar__in">
+    <span class="bar__name"><b>AI</b> Foundations</span>
+    <span class="bar__search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="search" type="text" placeholder="Search entries (token, RAG, GPU…)" aria-label="Search entries">
+    </span>
+    <button class="clearbtn" id="clearbtn">Clear filter</button>
+    <span class="ring">
+      <svg width="34" height="34" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="4"/><circle id="ringfill" cx="20" cy="20" r="16" fill="none" stroke="var(--brass)" stroke-width="4" stroke-linecap="round" stroke-dasharray="100.5" stroke-dashoffset="100.5"/></svg>
+      <span class="ring__txt"><b id="seen">0</b>/<span id="total">0</span></span>
+    </span>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap hero__in">
+    <div class="eyebrow">Field guide to artificial intelligence</div>
+    <h1>Find your way<br>around <em>AI</em>.</h1>
+    <p class="lede">Eighty plain-language entries, each colour-keyed to where it lives in the stack. Browse by layer, follow a guided trail, or search for the term that's been nagging you.</p>
+
+    <div class="legend">
+      <div class="legend__label">The legend — tap a layer to filter the entries</div>
+      <div class="legend__grid" id="legend"></div>
+    </div>
+  </div>
+</header>
+
+<!-- TRAILS -->
+<section class="sec wrap">
+  <p class="sec__eyebrow">Start here</p>
+  <h2 class="sec__title">Guided trails</h2>
+  <p class="sec__sub">Short routes through the terrain. Each trail opens a numbered set of stops you can step through in order.</p>
+  <div class="trails" id="trails"></div>
+</section>
+
+<!-- DIAGRAMS -->
+<section class="sec wrap">
+  <p class="sec__eyebrow">Orientation</p>
+  <h2 class="sec__title">Three ways to see the whole</h2>
+  <p class="sec__sub">The layers and what each is for; how one question travels through them; and how the companies that make the technology line up. The colours carry across all three.</p>
+  <div class="figrow">
+    <figure class="fig" style="margin:0">
+      <h3>The layers</h3>
+      <p class="cap">Tap a layer to filter the entries below. Governance wraps around all of them.</p>
+      <svg id="diagramA" viewBox="0 0 760 340" role="img" aria-label="The stack from Application down to Cloud and compute, with Governance spanning all layers">
+        <g class="dlyr" data-layer="app"><rect class="lyrbox" x="16" y="10" width="540" height="56" rx="10" fill="#4f46e5" fill-opacity="0.1" stroke="#cfd6e2"/><rect x="16" y="10" width="6" height="56" rx="3" fill="#4f46e5"/><text x="40" y="34" font-family="Fraunces,serif" font-weight="600" font-size="15" fill="#0d1b2a">Application</text><text x="40" y="52" font-size="11.5" fill="#566476">The screen people actually use</text></g>
+        <g class="dlyr" data-layer="orch"><rect class="lyrbox" x="16" y="74" width="540" height="56" rx="10" fill="#0e8aa8" fill-opacity="0.1" stroke="#cfd6e2"/><rect x="16" y="74" width="6" height="56" rx="3" fill="#0e8aa8"/><text x="40" y="98" font-family="Fraunces,serif" font-weight="600" font-size="15" fill="#0d1b2a">Orchestration</text><text x="40" y="116" font-size="11.5" fill="#566476">The logic that runs the steps</text></g>
+        <g class="dlyr" data-layer="gateway"><rect class="lyrbox" x="16" y="138" width="540" height="56" rx="10" fill="#c2410c" fill-opacity="0.1" stroke="#cfd6e2"/><rect x="16" y="138" width="6" height="56" rx="3" fill="#c2410c"/><text x="40" y="162" font-family="Fraunces,serif" font-weight="600" font-size="15" fill="#0d1b2a">Gateway / API</text><text x="40" y="180" font-size="11.5" fill="#566476">The doorway between app and model</text></g>
+        <g class="dlyr" data-layer="model"><rect class="lyrbox" x="16" y="202" width="540" height="56" rx="10" fill="#be123c" fill-opacity="0.1" stroke="#cfd6e2"/><rect x="16" y="202" width="6" height="56" rx="3" fill="#be123c"/><text x="40" y="226" font-family="Fraunces,serif" font-weight="600" font-size="15" fill="#0d1b2a">Foundation model</text><text x="40" y="244" font-size="11.5" fill="#566476">The AI that generates the output</text></g>
+        <g class="dlyr" data-layer="compute"><rect class="lyrbox" x="16" y="266" width="540" height="56" rx="10" fill="#15803d" fill-opacity="0.1" stroke="#cfd6e2"/><rect x="16" y="266" width="6" height="56" rx="3" fill="#15803d"/><text x="40" y="290" font-family="Fraunces,serif" font-weight="600" font-size="15" fill="#0d1b2a">Cloud &amp; compute</text><text x="40" y="308" font-size="11.5" fill="#566476">The machines that run all of it</text></g>
+        <g class="dlyr" data-layer="gov"><rect class="lyrbox" x="580" y="10" width="164" height="312" rx="10" fill="#5b6675" fill-opacity="0.1" stroke="#cfd6e2"/><rect x="580" y="10" width="6" height="312" rx="3" fill="#5b6675"/><text x="604" y="150" font-family="Fraunces,serif" font-weight="600" font-size="15" fill="#0d1b2a">Governance</text><text x="604" y="170" font-family="Fraunces,serif" font-weight="600" font-size="15" fill="#0d1b2a">&amp; security</text><text x="604" y="194" font-size="11.5" fill="#566476">applies across</text><text x="604" y="210" font-size="11.5" fill="#566476">every layer</text></g>
+      </svg>
+    </figure>
+
+    <figure class="fig" style="margin:0">
+      <h3>How a request flows</h3>
+      <p class="cap">A question travels down the stack; the answer comes back up.</p>
+      <svg viewBox="0 0 620 470" role="img" aria-label="A question flows down through Application, Orchestration, Gateway and Foundation model, then the answer returns up; all running on cloud and compute">
+        <defs>
+          <marker id="aDown" markerWidth="10" markerHeight="10" refX="5" refY="8" orient="auto"><path d="M1,1 L5,8 L9,1" fill="none" stroke="#b45309" stroke-width="2"/></marker>
+          <marker id="aUp" markerWidth="10" markerHeight="10" refX="5" refY="2" orient="auto"><path d="M1,9 L5,2 L9,9" fill="none" stroke="#0a7d75" stroke-width="2"/></marker>
+        </defs>
+        <rect x="180" y="8" width="260" height="36" rx="18" fill="#0d1b2a"/><text x="310" y="31" text-anchor="middle" font-size="13" fill="#fff" font-weight="600">A person asks a question</text>
+        <line x1="118" y1="70" x2="118" y2="316" stroke="#b45309" stroke-width="2.5" marker-end="url(#aDown)"/><text x="112" y="200" transform="rotate(-90 112 200)" text-anchor="middle" font-size="10.5" fill="#b45309" font-family="'Space Mono',monospace" letter-spacing="1">QUESTION</text>
+        <line x1="502" y1="316" x2="502" y2="70" stroke="#0a7d75" stroke-width="2.5" marker-end="url(#aUp)"/><text x="508" y="200" transform="rotate(90 508 200)" text-anchor="middle" font-size="10.5" fill="#0a7d75" font-family="'Space Mono',monospace" letter-spacing="1">ANSWER</text>
+        <g><rect x="160" y="60" width="300" height="52" rx="10" fill="#4f46e5" fill-opacity="0.12" stroke="#cfd6e2"/><text x="176" y="84" font-size="13.5" font-weight="600" fill="#0d1b2a" font-family="Fraunces,serif">Application</text><text x="176" y="102" font-size="11.5" fill="#566476">captures the question, shows the answer</text></g>
+        <g><rect x="160" y="128" width="300" height="52" rx="10" fill="#0e8aa8" fill-opacity="0.12" stroke="#cfd6e2"/><text x="176" y="152" font-size="13.5" font-weight="600" fill="#0d1b2a" font-family="Fraunces,serif">Orchestration</text><text x="176" y="170" font-size="11.5" fill="#566476">finds the right info, builds the prompt</text></g>
+        <g><rect x="160" y="196" width="300" height="52" rx="10" fill="#c2410c" fill-opacity="0.12" stroke="#cfd6e2"/><text x="176" y="220" font-size="13.5" font-weight="600" fill="#0d1b2a" font-family="Fraunces,serif">Gateway / API</text><text x="176" y="238" font-size="11.5" fill="#566476">routes the request to the chosen model</text></g>
+        <g><rect x="160" y="264" width="300" height="52" rx="10" fill="#be123c" fill-opacity="0.12" stroke="#cfd6e2"/><text x="176" y="288" font-size="13.5" font-weight="600" fill="#0d1b2a" font-family="Fraunces,serif">Foundation model</text><text x="176" y="306" font-size="11.5" fill="#566476">generates the answer</text></g>
+        <rect x="90" y="340" width="440" height="44" rx="10" fill="#15803d" fill-opacity="0.14" stroke="#cfd6e2"/><text x="310" y="367" text-anchor="middle" font-size="12.5" font-weight="600" fill="#0d1b2a" font-family="Fraunces,serif">Cloud &amp; compute — runs all of the above</text>
+        <rect x="90" y="398" width="440" height="40" rx="10" fill="#5b6675" fill-opacity="0.12" stroke="#cfd6e2"/><text x="310" y="423" text-anchor="middle" font-size="12" fill="#3b4757">Governance &amp; security apply across every step</text>
+      </svg>
+    </figure>
+  </div>
+
+  <figure class="fig" style="margin-top:20px">
+    <h3>How the AI industry fits together</h3>
+    <p class="cap">A rough supply chain, from the firms that make the hardware down to the people using the tools. The colours map back to the stack.</p>
+    <svg viewBox="0 0 620 350" role="img" aria-label="The AI industry from chip makers to model labs to cloud providers to application builders to end users">
+      <g><rect x="96" y="16" width="456" height="52" rx="10" fill="#15803d" fill-opacity="0.12" stroke="#cfd6e2"/><rect x="96" y="16" width="6" height="52" rx="3" fill="#15803d"/><text x="116" y="38" font-size="13.5" font-weight="600" fill="#0d1b2a" font-family="Fraunces,serif">Chip &amp; infrastructure makers</text><text x="116" y="56" font-size="11.5" fill="#566476">Make the GPUs and data centres models run on (e.g. NVIDIA)</text></g>
+      <g><rect x="96" y="80" width="456" height="52" rx="10" fill="#be123c" fill-opacity="0.12" stroke="#cfd6e2"/><rect x="96" y="80" width="6" height="52" rx="3" fill="#be123c"/><text x="116" y="102" font-size="13.5" font-weight="600" fill="#0d1b2a" font-family="Fraunces,serif">Model labs</text><text x="116" y="120" font-size="11.5" fill="#566476">Train the foundation models (OpenAI, Anthropic, Google, Mistral)</text></g>
+      <g><rect x="96" y="144" width="456" height="52" rx="10" fill="#c2410c" fill-opacity="0.12" stroke="#cfd6e2"/><rect x="96" y="144" width="6" height="52" rx="3" fill="#c2410c"/><text x="116" y="166" font-size="13.5" font-weight="600" fill="#0d1b2a" font-family="Fraunces,serif">Cloud &amp; model access</text><text x="116" y="184" font-size="11.5" fill="#566476">Host and serve the models through APIs (Bedrock, Azure, Vertex)</text></g>
+      <g><rect x="96" y="208" width="456" height="52" rx="10" fill="#4f46e5" fill-opacity="0.12" stroke="#cfd6e2"/><rect x="96" y="208" width="6" height="52" rx="3" fill="#4f46e5"/><text x="116" y="230" font-size="13.5" font-weight="600" fill="#0d1b2a" font-family="Fraunces,serif">Application builders</text><text x="116" y="248" font-size="11.5" fill="#566476">Build the tools and products on top of the models</text></g>
+      <g><rect x="96" y="272" width="456" height="52" rx="10" fill="#5b6675" fill-opacity="0.12" stroke="#cfd6e2"/><rect x="96" y="272" width="6" height="52" rx="3" fill="#5b6675"/><text x="116" y="294" font-size="13.5" font-weight="600" fill="#0d1b2a" font-family="Fraunces,serif">End users</text><text x="116" y="312" font-size="11.5" fill="#566476">Use the tools to get real work done</text></g>
+    </svg>
+  </figure>
+</section>
+
+<!-- ENTRIES -->
+<section class="sec wrap">
+  <p class="sec__eyebrow">The entries</p>
+  <h2 class="sec__title">Browse every concept</h2>
+  <p class="sec__sub">Grouped into nine plates. Tap any entry for a plain definition, a real example, and a few cross-references to follow.</p>
+  <div class="trailbar" id="trailbar"></div>
+  <div id="sections"></div>
+  <p class="empty" id="empty">No entry matches that search. Try a shorter word.</p>
+</section>
+
+<footer class="wrap">
+  <p>A field guide for building foundational knowledge of how AI works, from the underlying stack to the wider industry. Definitions are plain-language summaries written to build intuition, not technical specifications. The named companies ground the ideas and may change over time; the concepts will not.</p>
+</footer>
+
+<script>
+const LAYER = {
+  app:{name:"Application", role:"The screen people use", c:"var(--app)"},
+  orch:{name:"Orchestration", role:"The logic between", c:"var(--orch)"},
+  gateway:{name:"Gateway / API", role:"The doorway to the model", c:"var(--gateway)"},
+  model:{name:"Foundation model", role:"The AI itself", c:"var(--model)"},
+  compute:{name:"Cloud & compute", role:"The machines underneath", c:"var(--compute)"},
+  gov:{name:"Governance", role:"Safety across all layers", c:"var(--gov)"}
+};
+const LAYER_ORDER = ["app","orch","gateway","model","compute","gov"];
+
+const CATS = [
+  {id:"cloud", title:"Cloud & Compute", blurb:"Where AI runs and what powers it."},
+  {id:"api", title:"APIs & Integration", blurb:"How software talks to software."},
+  {id:"models", title:"Foundation Models", blurb:"The AI brains, and how they think in tokens."},
+  {id:"data", title:"Data & Retrieval", blurb:"Giving AI the right facts to work from."},
+  {id:"orch", title:"Orchestration & Agents", blurb:"The logic that turns a model into a tool."},
+  {id:"build", title:"Building & Delivery", blurb:"From idea to something people use."},
+  {id:"gov", title:"Security, Risk & Governance", blurb:"Doing it safely and accountably."},
+  {id:"usecases", title:"AI Use Cases", blurb:"The common jobs people put AI to."},
+  {id:"industry", title:"The AI Industry", blurb:"How AI companies and the market work."}
+];
+
+const C = [
+  {cat:"cloud",l:"compute",n:"Cloud computing",d:"Renting computing power, storage and software over the internet instead of owning the physical machines.",e:"Rather than buying servers, you run your AI app on a provider like Azure or AWS and pay only for what you use."},
+  {cat:"cloud",l:"compute",n:"Compute",d:"The raw processing power that does the actual work of running a program or an AI model.",e:"Generating an AI answer consumes compute, and it is usually the biggest cost in running a model."},
+  {cat:"cloud",l:"compute",n:"GPU",d:"A specialised processor that does many calculations at once, which is what makes running large AI models practical.",e:"A model produces each word using GPU compute, which is why GPU time drives the cost of inference."},
+  {cat:"cloud",l:"compute",n:"Hosting",d:"The environment where your application actually lives and runs so people can reach it.",e:"A managed hosting service gives your team a secure cloud space to run a generative AI prototype."},
+  {cat:"cloud",l:"compute",n:"Serverless",d:"Running code where the cloud provider manages the servers for you, and you are billed only when the code runs.",e:"A serverless function wakes to process each question, then costs nothing while idle."},
+  {cat:"cloud",l:"compute",n:"Container",d:"A self-contained package of an app and everything it needs, so it behaves the same on any machine.",e:"Packaging your assistant in a container means it runs identically in testing and in production."},
+  {cat:"cloud",l:"compute",n:"Scalability",d:"The ability of a system to handle more load by adding resources, without falling over.",e:"If 500 staff use the assistant at once, a scalable design adds capacity automatically."},
+  {cat:"cloud",l:"gov",n:"Data residency",d:"The requirement that data is stored and processed within a particular country's borders.",e:"Choosing onshore models keeps sensitive data inside the country rather than sending it offshore."},
+  {cat:"cloud",l:"compute",n:"Infrastructure as Code",d:"Defining your cloud setup in written files so it can be rebuilt consistently and reviewed like any other code.",e:"A configuration file lets your team recreate the whole environment in minutes rather than clicking through a console."},
+
+  {cat:"api",l:"gateway",n:"API",d:"A defined way for two pieces of software to talk by sending requests and getting responses.",e:"Your app sends a question to a model's API and receives the generated answer back."},
+  {cat:"api",l:"gateway",n:"Endpoint",d:"The specific web address an application sends its API requests to.",e:"A service might expose an endpoint such as api.example.com/v1/chat, where your app sends its requests."},
+  {cat:"api",l:"gateway",n:"REST",d:"A common, simple set of conventions for how applications exchange data over the web.",e:"Most AI services offer a REST API, so your app uses a standard web request to reach them."},
+  {cat:"api",l:"gateway",n:"API key",d:"A secret credential that identifies your application and proves it is allowed to use a service.",e:"A service issues your app an API key so it knows the request is authorised."},
+  {cat:"api",l:"gov",n:"Authentication",d:"Confirming who or what is making a request before granting access.",e:"A service authenticates each call using your API key before it does any work."},
+  {cat:"api",l:"gateway",n:"SDK",d:"A ready-made toolkit of code that makes it easier to build with a particular service or language.",e:"Using a provider's SDK saves your developers from writing the raw API calls by hand."},
+  {cat:"api",l:"gateway",n:"Rate limit",d:"A cap on how many requests you can make in a given period, to keep a service stable and fair.",e:"If your app exceeds the rate limit, extra requests are held back until the window resets."},
+  {cat:"api",l:"gateway",n:"Gateway",d:"A single managed entry point that sits in front of many services and routes each request to the right one.",e:"A model gateway lets your app connect once and routes each request to the right model, such as GPT-4o or Claude."},
+
+  {cat:"models",l:"model",n:"Foundation model",d:"A large AI model trained on huge amounts of data that can be adapted to many different tasks.",e:"Claude and GPT-4o are foundation models you can use for drafting, summarising or answering questions."},
+  {cat:"models",l:"model",n:"LLM",d:"A large language model, a foundation model that works with text by predicting likely words.",e:"An LLM can draft a brief because it has learned the patterns of written language."},
+  {cat:"models",l:"model",n:"Token",d:"A chunk of text, often a word or part of one, that a model reads and generates, and the unit you are billed on.",e:"Most providers charge by tokens processed, so a longer prompt and answer cost more."},
+  {cat:"models",l:"model",n:"Context window",d:"The maximum amount of text a model can consider at once, including your prompt and its answer.",e:"A large context window lets you paste a whole policy document for the model to work from."},
+  {cat:"models",l:"model",n:"Parameters",d:"The internal values a model learns during training, loosely a measure of its size and capacity.",e:"A model with more parameters often reasons better but costs more compute to run."},
+  {cat:"models",l:"model",n:"Inference",d:"The act of running a trained model to produce an output from your input.",e:"Every answer the assistant gives is an inference, and inference is what consumes most of the cost."},
+  {cat:"models",l:"model",n:"Fine-tuning",d:"Further training a foundation model on your own examples so it performs better on a specific task.",e:"An agency might fine-tune a model on past decisions so its drafting matches house style."},
+  {cat:"models",l:"model",n:"Temperature",d:"A setting that controls how predictable or creative a model's output is.",e:"A low temperature gives consistent, factual answers, which suits a policy assistant."},
+  {cat:"models",l:"model",n:"Multimodal",d:"A model that can work with more than one kind of input, such as text and images together.",e:"A multimodal model can read a scanned form and answer questions about it."},
+
+  {cat:"data",l:"model",n:"Embedding",d:"Turning text into a list of numbers that captures its meaning, so a computer can compare meanings.",e:"Turning each policy paragraph into an embedding lets the system find the ones closest in meaning to a question."},
+  {cat:"data",l:"orch",n:"Vector",d:"The list of numbers an embedding produces, representing a piece of text as a point in mathematical space.",e:"Two paragraphs about the same topic have vectors that sit close together."},
+  {cat:"data",l:"compute",n:"Vector database",d:"A specialised store that holds embeddings and quickly finds the ones most similar to a query.",e:"When a staffer asks a question, the vector database returns the most relevant chunks in milliseconds."},
+  {cat:"data",l:"orch",n:"Semantic search",d:"Searching by meaning rather than by exact keywords.",e:"It finds the right clause even when the staffer used different words than the document."},
+  {cat:"data",l:"orch",n:"RAG",d:"Retrieval-augmented generation: fetch relevant documents first, then give them to the model so its answer is grounded in your sources.",e:"A RAG assistant looks up the actual policy text before answering, so it cites real clauses."},
+  {cat:"data",l:"orch",n:"Chunking",d:"Splitting long documents into smaller passages so they can be searched and fed to a model precisely.",e:"A 90-page manual is chunked into sections so only the relevant part is retrieved."},
+  {cat:"data",l:"orch",n:"Knowledge base",d:"The curated collection of documents or data your AI draws its answers from.",e:"The assistant's knowledge base is your agency's procurement guidance, and nothing else."},
+  {cat:"data",l:"gov",n:"Grounding",d:"Tying a model's answer to specific source material so it can be trusted and checked.",e:"Grounding means each answer comes with a citation to the clause it actually used."},
+
+  {cat:"orch",l:"orch",n:"Orchestration",d:"The coordinating logic that decides the steps, calls the right models and tools, and assembles the result.",e:"It is the code that retrieves documents, builds the prompt, calls the model and returns a cited answer."},
+  {cat:"orch",l:"orch",n:"Prompt",d:"The instruction and information you give a model to get the output you want.",e:"A good prompt tells the model its role, the task, and the source text to use."},
+  {cat:"orch",l:"orch",n:"System prompt",d:"A behind-the-scenes instruction that sets a model's role and rules for the whole conversation.",e:"A system prompt tells the assistant to answer only from approved policy and to cite sources."},
+  {cat:"orch",l:"orch",n:"Prompt engineering",d:"The craft of writing prompts that reliably get useful, accurate results.",e:"Adding 'if the answer is not in the documents, say so' reduces guessing."},
+  {cat:"orch",l:"orch",n:"Agent",d:"An AI system that can plan and take several steps, often using tools, to complete a goal rather than just answering once.",e:"An agent could read an email, look up a case, draft a reply and flag it for human approval."},
+  {cat:"orch",l:"orch",n:"Tool use",d:"Letting a model call external functions or systems to fetch data or perform actions it cannot do alone.",e:"Through tool use, the assistant can look up a live figure from a database instead of guessing."},
+  {cat:"orch",l:"gov",n:"Guardrails",d:"Rules and filters that keep an AI system within safe, appropriate and compliant boundaries.",e:"A guardrail blocks the assistant from answering questions outside its approved scope."},
+  {cat:"orch",l:"orch",n:"Workflow",d:"A defined sequence of steps that chains several actions or model calls together.",e:"A drafting workflow summarises, then drafts, then checks tone, each as a separate step."},
+
+  {cat:"build",l:"app",n:"Application",d:"The actual tool or interface people use, sitting on top of all the underlying technology.",e:"The chat window where staff type questions is the application layer."},
+  {cat:"build",l:"app",n:"Front end",d:"The part of an application a user sees and interacts with.",e:"The text box, the buttons and the displayed answer are all the front end."},
+  {cat:"build",l:"app",n:"Proof of concept",d:"A small build that tests whether an idea works before investing in a full solution.",e:"A two-week proof of concept shows whether a policy assistant can answer accurately enough to pursue."},
+  {cat:"build",l:"app",n:"Use case",d:"A specific, real task you want AI to help with, with a clear purpose and user.",e:"Helping procurement staff find the right threshold quickly is a use case."},
+  {cat:"build",l:"app",n:"Pilot",d:"A limited real-world trial with actual users and data before wider rollout.",e:"A pilot puts the assistant in front of one branch to test it on genuine questions."},
+  {cat:"build",l:"app",n:"Production",d:"The fully live version of a system that real users depend on day to day.",e:"Moving to production means the assistant is supported, monitored and available to everyone."},
+  {cat:"build",l:"gov",n:"Human in the loop",d:"Designing a process so a person reviews or approves the AI's output before it takes effect.",e:"The agent drafts the letter, but a human in the loop signs off before it is sent."},
+  {cat:"build",l:"app",n:"UX",d:"How easy, clear and pleasant a tool is to use.",e:"Good UX means staff get a cited answer in one step without training."},
+
+  {cat:"gov",l:"gov",n:"Hallucination",d:"When a model states something plausible-sounding but false or invented.",e:"Without grounding, an assistant might confidently cite a threshold that does not exist."},
+  {cat:"gov",l:"gov",n:"PII",d:"Personal information that can identify an individual, which must be handled carefully.",e:"A staffer should not paste a member of the public's PII into a public AI tool."},
+  {cat:"gov",l:"gov",n:"Classification",d:"The sensitivity label applied to government information, such as OFFICIAL, OFFICIAL: Sensitive or PROTECTED.",e:"An AI environment must be accredited for the highest classification of data it will handle."},
+  {cat:"gov",l:"gov",n:"IRAP",d:"The Infosec Registered Assessors Program, an independent security assessment used across government.",e:"Cloud infrastructure is typically IRAP-assessed before it is trusted to hold classified data."},
+  {cat:"gov",l:"gov",n:"Audit logging",d:"Keeping a record of who did what and when, so activity can be reviewed later.",e:"Audit logging captures every API call to the model for accountability."},
+  {cat:"gov",l:"gov",n:"Responsible AI",d:"Using AI in ways that are ethical, transparent, fair and accountable.",e:"Ethics principles guide responsible use, such as keeping a human accountable for decisions."},
+  {cat:"gov",l:"gov",n:"Authority to Operate",d:"Formal sign-off that a system is secure enough to run with real data.",e:"Moving a prototype to an environment with real data requires an Authority to Operate."},
+
+  {cat:"usecases",l:"app",n:"Summarisation",d:"Condensing long text down to its key points.",e:"Turning a 40-page report into a one-page summary of its findings."},
+  {cat:"usecases",l:"app",n:"Question answering",d:"Answering questions from a body of documents, often using RAG.",e:"Asking an assistant a policy question and getting a cited answer from the manual."},
+  {cat:"usecases",l:"app",n:"Drafting & rewriting",d:"Producing or improving written content from a short brief.",e:"Drafting a first version of a letter, or tightening a paragraph for clarity."},
+  {cat:"usecases",l:"app",n:"Classification",d:"Sorting items into categories automatically.",e:"Tagging incoming enquiries by topic so they reach the right team."},
+  {cat:"usecases",l:"app",n:"Information extraction",d:"Pulling specific structured details out of unstructured text.",e:"Reading invoices and extracting the date, amount and supplier."},
+  {cat:"usecases",l:"app",n:"Translation",d:"Converting text from one language into another.",e:"Translating a public notice into several community languages."},
+  {cat:"usecases",l:"app",n:"Transcription",d:"Turning recorded speech into written text.",e:"Producing a transcript and notes from a recorded meeting."},
+  {cat:"usecases",l:"app",n:"Search & discovery",d:"Helping people find the right information quickly.",e:"Searching a knowledge base by meaning rather than exact words."},
+  {cat:"usecases",l:"app",n:"Code generation",d:"Writing or explaining software code from a description.",e:"Generating a script to clean a spreadsheet, then explaining how it works."},
+  {cat:"usecases",l:"app",n:"Data analysis",d:"Finding patterns and insights in a body of data.",e:"Summarising trends in a dataset and flagging the anomalies."},
+  {cat:"usecases",l:"app",n:"Image generation",d:"Creating or editing images from a text description.",e:"Producing a simple diagram or illustration for a presentation."},
+  {cat:"usecases",l:"app",n:"Agents & automation",d:"Chaining steps so AI completes a multi-step task with limited supervision.",e:"An assistant that drafts a reply, checks a record and routes it for approval."},
+
+  {cat:"industry",l:"model",n:"Model lab",d:"A company that trains foundation models, such as OpenAI, Anthropic, Google or Mistral.",e:"Anthropic trains the Claude family of models; OpenAI trains GPT."},
+  {cat:"industry",l:"compute",n:"Hyperscaler",d:"A large cloud provider that runs the data centres and offers AI services, such as AWS, Microsoft Azure or Google Cloud.",e:"An organisation rents compute and model access from a hyperscaler rather than owning servers."},
+  {cat:"industry",l:"gateway",n:"Model marketplace",d:"A cloud service that offers many providers' models through one platform.",e:"Amazon Bedrock and Azure offer access to several models behind a single API."},
+  {cat:"industry",l:"model",n:"Open vs closed weights",d:"Whether a model's internal values are kept private by the lab or released for anyone to run.",e:"GPT and Claude are closed, while Llama and Mistral release open-weight models you can host yourself."},
+  {cat:"industry",l:"model",n:"API pricing",d:"Most providers charge for model use by the token, so cost scales with how much text goes in and out.",e:"A tool that processes long documents costs more per use than one answering short questions."},
+  {cat:"industry",l:"app",n:"Consumer app vs platform",d:"Providers sell both ready-made apps for people and raw API access for builders.",e:"A chat product is a consumer app; the same provider's API is the platform developers build on."},
+  {cat:"industry",l:"compute",n:"Compute & chips",d:"Specialised chips, mostly GPUs, are the scarce resource that training and running models depends on.",e:"NVIDIA designs the GPUs that most large models are trained and served on."},
+  {cat:"industry",l:"model",n:"Training data",d:"The large body of text and other content a model learns from.",e:"A model's tone and knowledge reflect the data it was trained on."},
+  {cat:"industry",l:"model",n:"Frontier model",d:"The most capable models available at a given time, usually the newest and largest.",e:"Each lab periodically releases new frontier models that push capability forward."},
+  {cat:"industry",l:"model",n:"Benchmark",d:"A standard test used to compare how models perform on tasks.",e:"Labs publish benchmark scores to show how a new model stacks up against rivals."},
+  {cat:"industry",l:"compute",n:"Training vs inference cost",d:"Training a model is a huge one-off cost; running it for users (inference) is the ongoing cost.",e:"A lab spends heavily once to train a model, then charges per use to serve it."}
+];
+
+const TRAILS = [
+  {key:"new", n:"Trail 01", t:"New to AI", d:"The eight ideas that unlock everything else.",
+   stops:["Cloud computing","Compute","Foundation model","LLM","Token","Prompt","Application","Hallucination"]},
+  {key:"trace", n:"Trail 02", t:"Trace a question", d:"Follow one query down the stack and back.",
+   stops:["Application","Orchestration","Prompt","Embedding","Vector database","RAG","Gateway","Foundation model","Inference","Grounding"]},
+  {key:"market", n:"Trail 03", t:"How the industry works", d:"Who builds what, and how the money moves.",
+   stops:["Model lab","Hyperscaler","Compute & chips","Open vs closed weights","Model marketplace","API pricing","Frontier model","Training vs inference cost"]},
+  {key:"do", n:"Trail 04", t:"What AI can do", d:"The everyday jobs people put AI to.",
+   stops:["Summarisation","Question answering","Drafting & rewriting","Classification","Information extraction","Search & discovery","Agents & automation"]}
+];
+
+/* ---- index ---- */
+const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"");
+C.forEach(c=>c.id=slug(c.n));
+const byId = {}; C.forEach(c=>byId[c.id]=c);
+const seen = new Set();
+const CIRC = 2*Math.PI*16;
+
+/* ---- legend (hero) ---- */
+const legendEl = document.getElementById('legend');
+legendEl.innerHTML = `<button class="lrow all" data-layer="all" data-on="true"><span class="sw"></span><span><span class="ln">All layers</span><span class="lr">show everything</span></span></button>` +
+  LAYER_ORDER.map(k=>`<button class="lrow" data-layer="${k}"><span class="sw" style="background:${LAYER[k].c}"></span><span><span class="ln">${LAYER[k].name}</span><span class="lr">${LAYER[k].role}</span></span></button>`).join("");
+
+/* ---- trails ---- */
+document.getElementById('trails').innerHTML = TRAILS.map(tr=>
+  `<button class="trail" data-trail="${tr.key}"><span class="trail__n">${tr.n}</span><span class="trail__t">${tr.t}</span><span class="trail__d">${tr.d}</span><span class="trail__go">Start trail · ${tr.stops.length} stops</span></button>`).join("");
+
+/* ---- entries ---- */
+const sectionsEl = document.getElementById('sections');
+document.getElementById('total').textContent = C.length;
+const catProgress = {};
+
+CATS.forEach((cat,ci)=>{
+  const items = C.filter(c=>c.cat===cat.id);
+  const sec = document.createElement('section');
+  sec.className='cat'; sec.dataset.open = ci===0?"true":"false"; sec.dataset.cat=cat.id;
+  sec.innerHTML = `
+    <button class="cat__head" aria-expanded="${ci===0}">
+      <span><h3 class="cat__t">${cat.title}</h3><p class="cat__b">${cat.blurb}</p></span>
+      <span class="cat__meta">
+        <span class="prog"><span class="prog__txt"><span class="cp">0</span>/${items.length}</span><span class="prog__bar"><span class="prog__fill"></span></span></span>
+        <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </span>
+    </button>
+    <div class="cat__body"><div class="grid"></div>
+      <div class="detail"><div class="detail__top"></div><p class="detail__d"></p><p class="detail__ex"></p><div class="seealso"></div></div>
+    </div>`;
+  const grid = sec.querySelector('.grid');
+  items.forEach(c=>{
+    const t=document.createElement('button');
+    t.className='tile'; t.dataset.id=c.id; t.dataset.layer=c.l;
+    t.dataset.name=c.n.toLowerCase(); t.dataset.def=c.d.toLowerCase();
+    t.style.borderLeftColor=getComputedStyle(document.documentElement).getPropertyValue(`--${c.l}`).trim();
+    t.innerHTML=`<span class="tile__n">${c.n}</span><span class="tile__l">${LAYER[c.l].name}</span>`;
+    t.addEventListener('click',()=>{ const active=t.dataset.active==="true"; if(active){closeDetail(sec);} else {openConcept(c.id,true);} });
+    grid.appendChild(t);
+  });
+  sec.querySelector('.cat__head').addEventListener('click',()=>{
+    const open=sec.dataset.open==="true"; sec.dataset.open=open?"false":"true";
+    sec.querySelector('.cat__head').setAttribute('aria-expanded',String(!open));
+  });
+  catProgress[cat.id]={total:items.length, el:sec};
+  sectionsEl.appendChild(sec);
+});
+
+function relatedFor(c){
+  const sc=C.filter(x=>x.cat===c.cat&&x.id!==c.id).slice(0,3);
+  const sl=C.filter(x=>x.l===c.l&&x.cat!==c.cat&&x.id!==c.id).slice(0,2);
+  const out=[]; [...sc,...sl].forEach(x=>{ if(!out.find(o=>o.id===x.id)) out.push(x); });
+  return out.slice(0,4);
+}
+function closeDetail(sec){
+  sec.querySelectorAll('.tile').forEach(x=>x.dataset.active="false");
+  sec.querySelector('.detail').dataset.show="false";
+}
+function openConcept(id, keepFilter){
+  const c=byId[id]; if(!c) return;
+  if(!keepFilter){ resetFilters(true); }
+  const sec=catProgress[c.cat].el;
+  sec.dataset.open="true"; sec.querySelector('.cat__head').setAttribute('aria-expanded',"true");
+  sec.querySelectorAll('.tile').forEach(x=>x.dataset.active=(x.dataset.id===id)?"true":"false");
+  const d=sec.querySelector('.detail');
+  d.querySelector('.detail__top').innerHTML=`<h3 class="detail__n">${c.n}</h3><span class="chip" style="background:${LAYER[c.l].c}">${LAYER[c.l].name}</span>`;
+  d.querySelector('.detail__d').textContent=c.d;
+  d.querySelector('.detail__ex').innerHTML=`<span>In practice</span>${c.e}`;
+  const rel=relatedFor(c);
+  d.querySelector('.seealso').innerHTML = rel.length
+    ? `<p class="seealso__l">See also</p><div class="seealso__row">`+rel.map(r=>`<button class="ref" data-ref="${r.id}"><span class="sw" style="background:${LAYER[r.l].c}"></span>${r.n}</button>`).join("")+`</div>` : "";
+  d.querySelectorAll('.ref').forEach(b=>b.addEventListener('click',()=>openConcept(b.dataset.ref,false)));
+  d.dataset.show="true";
+  seen.add(id); updateProgress();
+  const tile=sec.querySelector(`.tile[data-id="${id}"]`);
+  if(tile) tile.scrollIntoView({behavior:"smooth",block:"center"});
+}
+
+function updateProgress(){
+  document.getElementById('seen').textContent=seen.size;
+  document.getElementById('ringfill').setAttribute('stroke-dashoffset', CIRC*(1-seen.size/C.length));
+  Object.values(catProgress).forEach(p=>{
+    const ids=[...p.el.querySelectorAll('.tile')].map(t=>t.dataset.id);
+    const got=ids.filter(i=>seen.has(i)).length;
+    p.el.querySelector('.cp').textContent=got;
+    p.el.querySelector('.prog__fill').style.width=(got/p.total*100)+"%";
+  });
+  document.querySelectorAll('#trailbar .stop').forEach(s=>{ if(seen.has(s.dataset.ref)) s.dataset.seen="true"; });
+}
+
+/* ---- filters ---- */
+let activeLayer="all", activeTrail=null;
+const trailbar=document.getElementById('trailbar');
+
+function setLayer(layer){
+  activeTrail=null; trailbar.dataset.show="false";
+  activeLayer=layer;
+  document.querySelectorAll('#legend .lrow').forEach(b=>b.dataset.on=(b.dataset.layer===layer)?"true":"false");
+  document.querySelectorAll('#diagramA .dlyr').forEach(g=>g.dataset.on=(g.dataset.layer===layer)?"true":"false");
+  applyFilters();
+}
+function setTrail(key){
+  const tr=TRAILS.find(t=>t.key===key); if(!tr) return;
+  activeTrail=tr; activeLayer="all";
+  document.querySelectorAll('#legend .lrow').forEach(b=>b.dataset.on=(b.dataset.layer==="all")?"true":"false");
+  document.querySelectorAll('#diagramA .dlyr').forEach(g=>g.dataset.on="false");
+  document.getElementById('search').value="";
+  const ids=tr.stops.map(slug);
+  trailbar.innerHTML=`<div class="trailbar__top"><h3 class="trailbar__t">${tr.t}</h3><span class="trailbar__c">${tr.stops.length} stops · tap to open in order</span></div>
+    <div class="stops">`+tr.stops.map((s,i)=>`<button class="stop" data-ref="${slug(s)}"><b>${String(i+1).padStart(2,'0')}</b>${s}</button>`).join("")+`</div>`;
+  trailbar.querySelectorAll('.stop').forEach(b=>b.addEventListener('click',()=>openConcept(b.dataset.ref,true)));
+  trailbar.dataset.show="true";
+  applyFilters();
+  trailbar.scrollIntoView({behavior:"smooth",block:"start"});
+}
+function resetFilters(silent){
+  activeLayer="all"; activeTrail=null;
+  document.querySelectorAll('#legend .lrow').forEach(b=>b.dataset.on=(b.dataset.layer==="all")?"true":"false");
+  document.querySelectorAll('#diagramA .dlyr').forEach(g=>g.dataset.on="false");
+  document.getElementById('search').value="";
+  trailbar.dataset.show="false";
+  if(!silent) applyFilters(); else applyFilters();
+}
+function applyFilters(){
+  const q=document.getElementById('search').value.trim().toLowerCase();
+  const trailIds = activeTrail ? activeTrail.stops.map(slug) : null;
+  let any=false;
+  document.querySelectorAll('.cat').forEach(sec=>{
+    let has=false;
+    sec.querySelectorAll('.tile').forEach(t=>{
+      const mq=!q||t.dataset.name.includes(q)||t.dataset.def.includes(q);
+      const ml=activeLayer==="all"||t.dataset.layer===activeLayer;
+      const mt=!trailIds||trailIds.includes(t.dataset.id);
+      const show=mq&&ml&&mt; t.hidden=!show; if(show){has=true;any=true;}
+    });
+    if(q||activeLayer!=="all"||activeTrail){ sec.dataset.open=has?"true":"false"; }
+  });
+  document.getElementById('empty').dataset.show=any?"false":"true";
+  const filtering = !!q || activeLayer!=="all" || !!activeTrail;
+  document.getElementById('clearbtn').dataset.show=filtering?"true":"false";
+}
+
+document.getElementById('legend').addEventListener('click',e=>{const b=e.target.closest('.lrow'); if(b) setLayer(b.dataset.layer);});
+document.getElementById('diagramA').addEventListener('click',e=>{const g=e.target.closest('.dlyr'); if(g) setLayer(activeLayer===g.dataset.layer?"all":g.dataset.layer);});
+document.getElementById('trails').addEventListener('click',e=>{const b=e.target.closest('.trail'); if(b) setTrail(b.dataset.trail);});
+document.getElementById('search').addEventListener('input',()=>{ if(activeTrail){activeTrail=null;trailbar.dataset.show="false";} applyFilters(); });
+document.getElementById('clearbtn').addEventListener('click',()=>resetFilters(false));
+updateProgress();
+</script>
+</body>
+</html>
